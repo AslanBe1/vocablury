@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="uz" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VocabPro — Gorizontal So'z Yodlash</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        pitch: '#05070c',
+                        surface: '#0b1120',
+                        card: '#0f172a',
+                        electric: '#2563eb',
+                        skyglow: '#38bdf8',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body {
+            background-color: #05070c;
+            color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            height: 100dvh;
+            width: 100vw;
+        }
+
+        /* Telefonni gorizontal burish animatsiyasi */
+        @keyframes rotatePhone {
+            0%, 15% { transform: rotate(0deg); }
+            45%, 65% { transform: rotate(-90deg); }
+            90%, 100% { transform: rotate(0deg); }
+        }
+
+        .animate-rotate-phone {
+            animation: rotatePhone 2.8s ease-in-out infinite;
+        }
+
+        /* 3-kategoriya (Gaplar bilan) uchun maxsus animatsiyalar */
+        .word-hero {
+            transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.45s ease, max-height 0.55s cubic-bezier(0.22, 1, 0.36, 1), margin 0.55s ease;
+            max-height: 140px;
+            opacity: 1;
+        }
+
+        /* Bosilganda so'z ekran tepasiga to'liq chiqib ko'rinmay qoladi */
+        .mode3-revealed .word-hero {
+            transform: translateY(-130px) scale(0.82);
+            opacity: 0;
+            max-height: 0;
+            margin: 0;
+            pointer-events: none;
+        }
+
+        .mode3-sentence-initial {
+            transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+            max-height: 120px;
+            opacity: 1;
+        }
+
+        .mode3-revealed .mode3-sentence-initial {
+            opacity: 0;
+            max-height: 0;
+            margin: 0;
+            padding: 0;
+            border-width: 0;
+            overflow: hidden;
+        }
+
+        /* Pastdan tepaga chiqadigan tarjima va gap bloki */
+        .reveal-slide-up {
+            opacity: 0;
+            transform: translateY(75px);
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .mode3-revealed .reveal-slide-up {
+            opacity: 1;
+            transform: translateY(0);
+            max-height: 360px;
+        }
+
+        /* Oddiy va Teskari rejimlarda tarjima chiqishi */
+        .fade-scale-in {
+            animation: fadeScaleIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes fadeScaleIn {
+            from {
+                opacity: 0;
+                transform: translateY(14px) scale(0.96);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* Karta almashish effekti */
+        .card-enter {
+            animation: cardSlideIn 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes cardSlideIn {
+            from {
+                opacity: 0;
+                transform: translateX(30px) scale(0.98);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0) scale(1);
+            }
+        }
+
+        /* Chiroyli scrollbar */
+        textarea::-webkit-scrollbar,
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        textarea::-webkit-scrollbar-track,
+        .custom-scroll::-webkit-scrollbar-track {
+            background: #0b1120;
+            border-radius: 8px;
+        }
+        textarea::-webkit-scrollbar-thumb,
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #1d4ed8;
+            border-radius: 8px;
+        }
+
+        /* Portret holatda ogohlantirish oynasi */
+        #portrait-overlay {
+            display: none;
+        }
+        @media screen and (orientation: portrait) and (max-width: 900px) {
+            #portrait-overlay.enforce-landscape {
+                display: flex;
+            }
+        }
+    </style>
+</head>
+<body class="bg-pitch text-slate-100 flex flex-col justify-between selection:bg-blue-600 selection:text-white">
+
+    <!-- PORTRET HOLAT UCHUN OGOHLANTIRISH OVERLAY -->
+    <div id="portrait-overlay" class="enforce-landscape fixed inset-0 z-50 bg-pitch/95 backdrop-blur-xl flex-col items-center justify-center p-6 text-center">
+        <div class="w-20 h-20 mb-6 rounded-2xl bg-blue-600/20 border border-blue-500/40 flex items-center justify-center shadow-[0_0_40px_rgba(37,99,235,0.3)]">
+            <svg class="w-10 h-10 text-sky-400 animate-rotate-phone" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <rect x="6" y="2" width="12" height="20" rx="2.5" ry="2.5"></rect>
+                <line x1="12" y1="18" x2="12.01" y2="18" stroke-width="3" stroke-linecap="round"></line>
+            </svg>
+        </div>
+        <h2 class="text-2xl font-extrabold text-white mb-2">Telefoningizni gorizontal burang</h2>
+        <p class="text-slate-400 text-sm max-w-xs mb-6 leading-relaxed">
+            So'zlar katta va qulay ko'rinishi uchun ilova gorizontal (landscape) holatda ishlashga mo'ljallangan.
+        </p>
+        <button onclick="dismissPortraitWarning()" class="px-5 py-2.5 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/40 text-sky-300 text-xs font-semibold transition">
+            Baribir davom etish
+        </button>
+    </div>
+
+    <!-- YUQORI BOSHQARUV PANELI (HEADER) -->
+    <header class="w-full px-4 sm:px-6 py-2.5 bg-surface/90 border-b border-blue-950/80 flex items-center justify-between shrink-0 z-20">
+        <!-- Chap tomon: Brend va Orqaga tugmasi -->
+        <div class="flex items-center gap-3">
+            <button id="btn-back-categories" onclick="showScreen('categories')" class="hidden items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-blue-950/60 border border-blue-800/40 text-sky-400 text-xs sm:text-sm font-semibold transition active:scale-95">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path>
+                </svg>
+                <span>Kategoriyalar</span>
+            </button>
+
+            <div id="brand-logo" class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-700 flex items-center justify-center shadow-lg shadow-blue-600/30">
+                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-sm sm:text-base font-extrabold tracking-tight text-white leading-none">
+                        VOCAB<span class="text-sky-400">FLOW</span>
+                    </h1>
+                    <span id="word-count-badge" class="text-[11px] text-blue-400 font-medium">0 ta so'z</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- O'rta qism: Aktiv kategoriya va Progress (faqat o'qish paytida ko'rinadi) -->
+        <div id="study-header-info" class="hidden items-center gap-3">
+            <span id="active-mode-label" class="px-3 py-1 rounded-full bg-blue-600/20 border border-blue-500/30 text-sky-300 text-xs font-semibold">
+                Eng → Uzb
+            </span>
+            <div class="flex items-center gap-2">
+                <div class="w-24 sm:w-36 h-2 bg-slate-900 rounded-full overflow-hidden border border-blue-950">
+                    <div id="progress-bar" class="h-full bg-gradient-to-r from-blue-600 to-sky-400 transition-all duration-300" style="width: 10%"></div>
+                </div>
+                <span id="progress-text" class="text-xs font-bold text-slate-300 tabular-nums">1 / 6</span>
+            </div>
+        </div>
+
+        <!-- O'ng tomon: Ovozni yoqish/o'chirish va So'z kiritish tugmalari -->
+        <div class="flex items-center gap-2">
+            <!-- Ovoz tugmasi -->
+            <button id="btn-sound-toggle" onclick="toggleSound()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/40 text-sky-300 text-xs sm:text-sm font-semibold transition active:scale-95" title="Ovozni yoqish yoki o'chirish">
+                <svg id="icon-sound-on" class="w-4 h-4 text-sky-400" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path>
+                </svg>
+                <svg id="icon-sound-off" class="w-4 h-4 text-slate-500 hidden" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path>
+                </svg>
+                <span id="sound-label">Ovoz: Yoqilgan</span>
+            </button>
+
+            <!-- So'z kiritish tugmasi -->
+            <button onclick="openInputModal()" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs sm:text-sm font-bold shadow-lg shadow-blue-600/30 transition active:scale-95">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path>
+                </svg>
+                <span>So'z kiritish</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- ASOSIY KONTENT QISMI -->
+    <main class="flex-1 w-full relative flex items-center justify-center px-4 sm:px-8 py-2 overflow-hidden">
+        <!-- Orqa fondagi mayin ko'k yorug'lik -->
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[260px] bg-blue-600/10 blur-[110px] rounded-full pointer-events-none"></div>
+
+        <!-- 1-EKRAN: KATEGORIYALARNI TANLASH -->
+        <section id="screen-categories" class="w-full max-w-5xl z-10 flex flex-col justify-center h-full">
+            <div class="text-center mb-3 sm:mb-5">
+                <h2 class="text-xl sm:text-2xl font-extrabold text-white tracking-tight">
+                    Yodlash kategoriyasini tanlang
+                </h2>
+                <p class="text-xs sm:text-sm text-slate-400 mt-0.5">
+                    O'zingizga qulay usulni tanlang yoki yuqoridan yangi so'zlar qo'shing
+                </p>
+            </div>
+
+            <!-- Kategoriyalar gorizontal grid -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3.5 w-full">
+                <!-- 1-Kategoriya: Eng -> Uzb -->
+                <button onclick="startStudy('eng-uzb')" class="group relative text-left p-3.5 sm:p-5 rounded-2xl bg-card/90 hover:bg-slate-900 border border-blue-900/60 hover:border-blue-500 transition-all duration-300 shadow-xl hover:shadow-blue-600/20 flex flex-col justify-between active:scale-[0.98]">
+                    <div>
+                        <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-sky-400 font-black text-sm sm:text-base mb-2.5 group-hover:scale-110 transition-transform">
+                            EN→UZ
+                        </div>
+                        <h3 class="text-sm sm:text-lg font-extrabold text-white group-hover:text-sky-400 transition-colors">
+                            1. Eng — Uzb
+                        </h3>
+                        <p class="text-[11px] sm:text-xs text-slate-400 mt-1 leading-snug">
+                            Inglizcha so'z katta chiqadi. Ustiga bossangiz tarjimasi ochiladi va keyingi so'zga o'tadi.
+                        </p>
+                    </div>
+                    <div class="mt-3 flex items-center text-xs font-bold text-blue-400 group-hover:translate-x-1 transition-transform">
+                        <span>Boshlash</span>
+                        <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </div>
+                </button>
+
+                <!-- 2-Kategoriya: Uzb -> Eng -->
+                <button onclick="startStudy('uzb-eng')" class="group relative text-left p-3.5 sm:p-5 rounded-2xl bg-card/90 hover:bg-slate-900 border border-blue-900/60 hover:border-blue-500 transition-all duration-300 shadow-xl hover:shadow-blue-600/20 flex flex-col justify-between active:scale-[0.98]">
+                    <div>
+                        <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-blue-400 font-black text-sm sm:text-base mb-2.5 group-hover:scale-110 transition-transform">
+                            UZ→EN
+                        </div>
+                        <h3 class="text-sm sm:text-lg font-extrabold text-white group-hover:text-sky-400 transition-colors">
+                            2. Uzb — Eng
+                        </h3>
+                        <p class="text-[11px] sm:text-xs text-slate-400 mt-1 leading-snug">
+                            Avval o'zbekcha tarjima ko'rinadi. Bosish orqali inglizchasini tekshiring.
+                        </p>
+                    </div>
+                    <div class="mt-3 flex items-center text-xs font-bold text-blue-400 group-hover:translate-x-1 transition-transform">
+                        <span>Boshlash</span>
+                        <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </div>
+                </button>
+
+                <!-- 3-Kategoriya: Gaplar bilan (Animatsiyali) -->
+                <button onclick="startStudy('context')" class="group relative text-left p-3.5 sm:p-5 rounded-2xl bg-gradient-to-br from-card to-blue-950/40 hover:to-blue-900/40 border border-blue-600/50 hover:border-sky-400 transition-all duration-300 shadow-xl shadow-blue-950/40 flex flex-col justify-between active:scale-[0.98]">
+                    <span class="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-md bg-sky-500/20 border border-sky-400/30 text-[9px] font-bold text-sky-300 uppercase tracking-wider">
+                        Animatsiyali
+                    </span>
+                    <div>
+                        <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-sky-500/20 border border-sky-400/40 flex items-center justify-center text-sky-300 mb-2.5 group-hover:scale-110 transition-transform">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-sm sm:text-lg font-extrabold text-white group-hover:text-sky-300 transition-colors">
+                            3. Gaplar bilan
+                        </h3>
+                        <p class="text-[11px] sm:text-xs text-slate-300/90 mt-1 leading-snug">
+                            Bosilganda so'z tepaga chiqib ketadi, o'rnida tarjima va gap tarjimasi chiqadi.
+                        </p>
+                    </div>
+                    <div class="mt-3 flex items-center text-xs font-bold text-sky-400 group-hover:translate-x-1 transition-transform">
+                        <span>Boshlash</span>
+                        <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </div>
+                </button>
+
+                <!-- 4-Kategoriya: Vaqtli mashq (Timer) -->
+                <button onclick="openTimerSetupModal()" class="group relative text-left p-3.5 sm:p-5 rounded-2xl bg-gradient-to-br from-card to-sky-950/50 hover:to-sky-900/40 border border-sky-500/50 hover:border-sky-300 transition-all duration-300 shadow-xl shadow-sky-950/30 flex flex-col justify-between active:scale-[0.98]">
+                    <span class="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-md bg-blue-500/20 border border-blue-400/30 text-[9px] font-bold text-sky-300 uppercase tracking-wider">
+                        Timer
+                    </span>
+                    <div>
+                        <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-blue-500/20 border border-sky-400/40 flex items-center justify-center text-sky-300 mb-2.5 group-hover:scale-110 transition-transform">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-sm sm:text-lg font-extrabold text-white group-hover:text-sky-300 transition-colors">
+                            4. Vaqtli (Timer)
+                        </h3>
+                        <p class="text-[11px] sm:text-xs text-slate-300/90 mt-1 leading-snug">
+                            Eng-Uzb yoki Uzb-Eng tanlab soniya kiriting. Vaqt tugasa keyingi so'zga o'tadi.
+                        </p>
+                    </div>
+                    <div class="mt-3 flex items-center text-xs font-bold text-sky-400 group-hover:translate-x-1 transition-transform">
+                        <span>Sozlash</span>
+                        <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </div>
+                </button>
+
+                <!-- 5-Kategoriya: Vaqtli (Gaplar) -->
+                <button onclick="openContextTimerModal()" class="col-span-2 sm:col-span-1 group relative text-left p-3.5 sm:p-5 rounded-2xl bg-gradient-to-br from-card via-blue-950/50 to-indigo-950/50 hover:to-blue-900/50 border border-sky-400/60 hover:border-sky-300 transition-all duration-300 shadow-xl shadow-blue-950/40 flex flex-col justify-between active:scale-[0.98]">
+                    <span class="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-md bg-sky-500/20 border border-sky-400/40 text-[9px] font-bold text-sky-300 uppercase tracking-wider">
+                        2x Timer
+                    </span>
+                    <div>
+                        <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-sky-500/20 border border-sky-400/40 flex items-center justify-center text-sky-300 mb-2.5 group-hover:scale-110 transition-transform">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-sm sm:text-lg font-extrabold text-white group-hover:text-sky-300 transition-colors">
+                            5. Vaqtli (Gaplar)
+                        </h3>
+                        <p class="text-[11px] sm:text-xs text-slate-300/90 mt-1 leading-snug">
+                            So'z va gap uchun alohida soniya bering. Vaqt tugasa avtomatik almashadi.
+                        </p>
+                    </div>
+                    <div class="mt-3 flex items-center text-xs font-bold text-sky-400 group-hover:translate-x-1 transition-transform">
+                        <span>Sozlash</span>
+                        <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </div>
+                </button>
+            </div>
+        </section>
+
+        <!-- 2-EKRAN: SO'ZLARNI YODLASH (FLASHCARD) -->
+        <section id="screen-study" class="hidden w-full max-w-5xl h-full z-10 flex-col justify-center items-center">
+            <!-- Asosiy bosiladigan karta -->
+            <div id="flashcard" onclick="handleCardTap()" class="relative w-full h-[84%] max-h-[420px] rounded-3xl bg-gradient-to-b from-slate-900/95 to-pitch border-2 border-blue-800/60 hover:border-blue-500/80 shadow-[0_0_50px_rgba(37,99,235,0.18)] flex flex-col items-center justify-center px-6 sm:px-14 py-4 text-center cursor-pointer transition-colors overflow-hidden">
+                
+                <!-- VAQTLI MASHQ UCHUN TAYMER VA PROGRESS CHIZIG'I -->
+                <div id="timer-hud" class="hidden absolute top-0 left-0 right-0 z-20 flex-col">
+                    <div class="w-full h-1.5 bg-slate-900 overflow-hidden">
+                        <div id="timer-progress-bar" class="h-full bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-500 transition-all duration-100 ease-linear" style="width: 100%"></div>
+                    </div>
+                    <div class="mt-3 mx-auto px-3.5 py-1 rounded-full bg-blue-950/90 border border-sky-400/50 shadow-lg shadow-sky-500/10 flex items-center gap-1.5">
+                        <svg class="w-4 h-4 text-sky-400 animate-pulse" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span id="timer-countdown-text" class="text-xs sm:text-sm font-black text-sky-300 tabular-nums">5.0s</span>
+                    </div>
+                </div>
+
+                <!-- Ovozni qayta eshitish tugmasi (karta ichida o'ng yuqorida) -->
+                <button id="btn-replay-audio" onclick="event.stopPropagation(); speakCurrentWord(true)" class="absolute top-4 right-4 z-20 p-2.5 sm:p-3 rounded-2xl bg-blue-600/20 hover:bg-blue-600/40 border border-blue-500/40 text-sky-400 transition active:scale-90" title="So'zni qayta eshitish">
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path>
+                    </svg>
+                </button>
+
+                <!-- Oldingi so'zga qaytish kichik tugmasi (chap yuqorida) -->
+                <button onclick="event.stopPropagation(); prevWord()" class="absolute top-4 left-4 z-20 px-3 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/70 text-slate-400 hover:text-white text-xs font-semibold flex items-center gap-1 transition active:scale-95">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path>
+                    </svg>
+                    <span>Oldingi</span>
+                </button>
+
+                <!-- KARTA KONTENTI (JS orqali dinamik yangilanadi) -->
+                <div id="card-content" class="w-full flex flex-col items-center justify-center">
+                    <!-- Dinamik to'ldiriladi -->
+                </div>
+
+                <!-- Pastki yo'riqnoma yozuvi -->
+                <div id="tap-hint" class="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 text-[11px] sm:text-xs font-semibold text-blue-400/80 tracking-wide">
+                    <span class="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse"></span>
+                    <span id="tap-hint-text">Tarjimani ko'rish uchun so'z ustiga bosing</span>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- SO'Z KIRITISH MODALI (POPUP) -->
+    <div id="input-modal" class="hidden fixed inset-0 z-40 bg-pitch/90 backdrop-blur-md items-center justify-center p-3 sm:p-5">
+        <div class="w-full max-w-4xl bg-surface border border-blue-800/70 rounded-3xl shadow-2xl shadow-blue-950/80 flex flex-col max-h-[92vh] overflow-hidden">
+            <!-- Modal Header -->
+            <div class="px-5 py-3.5 bg-slate-900/90 border-b border-blue-900/60 flex items-center justify-between">
+                <div>
+                    <h3 class="text-base sm:text-lg font-extrabold text-white">So'zlarni kiritish va tahrirlash</h3>
+                    <p class="text-[11px] sm:text-xs text-sky-400 font-mono mt-0.5">
+                        Format: soz[talaffuz] = tarjima [shu soz uchun gap] [shu gapni tarjimasi]
+                    </p>
+                </div>
+                <button onclick="closeInputModal()" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-4 sm:p-5 flex-1 flex flex-col gap-3 overflow-y-auto custom-scroll">
+                <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
+                    <span class="text-slate-400">Har bir so'zni yangi qatordan yozing:</span>
+                    <button onclick="loadSampleWords()" class="px-3 py-1 rounded-lg bg-blue-950 hover:bg-blue-900 border border-blue-700/50 text-sky-300 font-semibold transition">
+                        Namuna so'zlarni yuklash
+                    </button>
+                </div>
+
+                <textarea id="words-textarea" rows="7" class="w-full flex-1 bg-pitch border border-blue-900/80 focus:border-sky-400 focus:ring-2 focus:ring-sky-500/20 rounded-2xl p-3.5 text-xs sm:text-sm font-mono text-slate-100 placeholder-slate-600 outline-none leading-relaxed resize-none" placeholder="Apple[æpl] = Olma [I eat an apple every morning.] [Men har kuni ertalab olma yeyman.]"></textarea>
+
+                <!-- Xatolik yoki bildirishnoma xabari -->
+                <div id="modal-status" class="hidden px-3.5 py-2 rounded-xl text-xs font-semibold"></div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="px-5 py-3 bg-slate-900/90 border-t border-blue-900/60 flex items-center justify-end gap-3">
+                <button onclick="closeInputModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs sm:text-sm font-semibold transition">
+                    Bekor qilish
+                </button>
+                <button onclick="saveWordsFromInput()" class="px-6 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-sky-500 hover:from-blue-500 hover:to-sky-400 text-white text-xs sm:text-sm font-extrabold shadow-lg shadow-blue-600/30 transition active:scale-95">
+                    Saqlash va Boshlash
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4-KATEGORIYA (VAQTLI MASHQ) SOZLAMALARI MODALI -->
+    <div id="timer-setup-modal" class="hidden fixed inset-0 z-40 bg-pitch/90 backdrop-blur-md items-center justify-center p-3 sm:p-5">
+        <div class="w-full max-w-lg bg-surface border border-sky-500/50 rounded-3xl shadow-2xl shadow-blue-950/90 overflow-hidden">
+            <div class="px-5 py-3.5 bg-slate-900/90 border-b border-blue-900/60 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-xl bg-sky-500/20 border border-sky-400/40 flex items-center justify-center text-sky-400">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-base sm:text-lg font-extrabold text-white">4. Vaqtli mashq sozlamalari</h3>
+                </div>
+                <button onclick="closeTimerSetupModal()" class="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="p-5 flex flex-col gap-4">
+                <!-- Yo'nalish tanlash -->
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-sky-400 mb-2">Yo'nalishni tanlang:</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button type="button" id="dir-btn-eng-uzb" onclick="selectTimedDirection('eng-uzb')" class="py-2.5 px-4 rounded-xl bg-blue-600 border-2 border-sky-300 text-white font-extrabold text-sm shadow-lg shadow-blue-600/30 transition">
+                            Eng — Uzb
+                        </button>
+                        <button type="button" id="dir-btn-uzb-eng" onclick="selectTimedDirection('uzb-eng')" class="py-2.5 px-4 rounded-xl bg-slate-900 border border-blue-800/70 text-slate-300 hover:border-sky-400 font-bold text-sm transition">
+                            Uzb — Eng
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Soniya kiritish -->
+                <div>
+                    <label for="timer-seconds-input" class="block text-xs font-bold uppercase tracking-wider text-sky-400 mb-2">
+                        Har bir so'z uchun vaqt (soniya):
+                    </label>
+                    <div class="flex items-center gap-2.5">
+                        <input id="timer-seconds-input" type="number" min="1" max="120" value="5" class="w-28 bg-pitch border border-blue-700 focus:border-sky-400 rounded-xl px-3.5 py-2 text-lg font-black text-white text-center outline-none">
+                        <div class="flex flex-wrap gap-1.5">
+                            <button type="button" onclick="setPresetSeconds(3)" class="px-3 py-2 rounded-xl bg-slate-900 hover:bg-blue-950 border border-blue-800/70 text-sky-300 text-xs font-bold transition">3s</button>
+                            <button type="button" onclick="setPresetSeconds(5)" class="px-3 py-2 rounded-xl bg-slate-900 hover:bg-blue-950 border border-blue-800/70 text-sky-300 text-xs font-bold transition">5s</button>
+                            <button type="button" onclick="setPresetSeconds(8)" class="px-3 py-2 rounded-xl bg-slate-900 hover:bg-blue-950 border border-blue-800/70 text-sky-300 text-xs font-bold transition">8s</button>
+                            <button type="button" onclick="setPresetSeconds(12)" class="px-3 py-2 rounded-xl bg-slate-900 hover:bg-blue-950 border border-blue-800/70 text-sky-300 text-xs font-bold transition">12s</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="px-5 py-3.5 bg-slate-900/90 border-t border-blue-900/60 flex items-center justify-end gap-3">
+                <button onclick="closeTimerSetupModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs sm:text-sm font-semibold transition">
+                    Bekor qilish
+                </button>
+                <button onclick="startTimedStudy()" class="px-6 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-sky-400 hover:from-blue-500 hover:to-sky-300 text-white text-xs sm:text-sm font-extrabold shadow-lg shadow-sky-500/30 transition active:scale-95">
+                    Boshlash
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5-KATEGORIYA (VAQTLI GAPLAR) SOZLAMALARI MODALI -->
+    <div id="context-timer-modal" class="hidden fixed inset-0 z-40 bg-pitch/90 backdrop-blur-md items-center justify-center p-3 sm:p-5">
+        <div class="w-full max-w-lg bg-surface border border-sky-400/60 rounded-3xl shadow-2xl shadow-blue-950/90 overflow-hidden">
+            <div class="px-5 py-3.5 bg-slate-900/90 border-b border-blue-900/60 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-xl bg-sky-500/20 border border-sky-400/40 flex items-center justify-center text-sky-400">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-base sm:text-lg font-extrabold text-white">5. Vaqtli (Gaplar) sozlamalari</h3>
+                </div>
+                <button onclick="closeContextTimerModal()" class="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="p-5 flex flex-col gap-4">
+                <!-- 1. So'z uchun vaqt -->
+                <div>
+                    <label for="ctx-word-seconds-input" class="block text-xs font-bold uppercase tracking-wider text-sky-400 mb-2">
+                        So'z uchun vaqt (soniya):
+                    </label>
+                    <div class="flex items-center gap-2.5">
+                        <input id="ctx-word-seconds-input" type="number" min="1" max="120" value="4" class="w-28 bg-pitch border border-blue-700 focus:border-sky-400 rounded-xl px-3.5 py-2 text-lg font-black text-white text-center outline-none">
+                        <div class="flex flex-wrap gap-1.5">
+                            <button type="button" onclick="setCtxWordPreset(3)" class="px-3 py-2 rounded-xl bg-slate-900 hover:bg-blue-950 border border-blue-800/70 text-sky-300 text-xs font-bold transition">3s</button>
+                            <button type="button" onclick="setCtxWordPreset(5)" class="px-3 py-2 rounded-xl bg-slate-900 hover:bg-blue-950 border border-blue-800/70 text-sky-300 text-xs font-bold transition">5s</button>
+                            <button type="button" onclick="setCtxWordPreset(8)" class="px-3 py-2 rounded-xl bg-slate-900 hover:bg-blue-950 border border-blue-800/70 text-sky-300 text-xs font-bold transition">8s</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Gap va tarjima uchun vaqt -->
+                <div>
+                    <label for="ctx-sentence-seconds-input" class="block text-xs font-bold uppercase tracking-wider text-sky-400 mb-2">
+                        Gap uchun vaqt (soniya):
+                    </label>
+                    <div class="flex items-center gap-2.5">
+                        <input id="ctx-sentence-seconds-input" type="number" min="1" max="120" value="6" class="w-28 bg-pitch border border-blue-700 focus:border-sky-400 rounded-xl px-3.5 py-2 text-lg font-black text-white text-center outline-none">
+                        <div class="flex flex-wrap gap-1.5">
+                            <button type="button" onclick="setCtxSentencePreset(4)" class="px-3 py-2 rounded-xl bg-slate-900 hover:bg-blue-950 border border-blue-800/70 text-sky-300 text-xs font-bold transition">4s</button>
+                            <button type="button" onclick="setCtxSentencePreset(6)" class="px-3 py-2 rounded-xl bg-slate-900 hover:bg-blue-950 border border-blue-800/70 text-sky-300 text-xs font-bold transition">6s</button>
+                            <button type="button" onclick="setCtxSentencePreset(10)" class="px-3 py-2 rounded-xl bg-slate-900 hover:bg-blue-950 border border-blue-800/70 text-sky-300 text-xs font-bold transition">10s</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="px-5 py-3.5 bg-slate-900/90 border-t border-blue-900/60 flex items-center justify-end gap-3">
+                <button onclick="closeContextTimerModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs sm:text-sm font-semibold transition">
+                    Bekor qilish
+                </button>
+                <button onclick="startTimedContextStudy()" class="px-6 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-sky-400 hover:from-blue-500 hover:to-sky-300 text-white text-xs sm:text-sm font-extrabold shadow-lg shadow-sky-500/30 transition active:scale-95">
+                    Boshlash
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Boshlang'ich namuna so'zlar bo'shatildi
+        const DEFAULT_RAW_TEXT = ``;
+
+        // Ilova holati (State)
+        let wordsList = [];
+        let currentIndex = 0;
+        let currentMode = 'eng-uzb'; // 'eng-uzb' | 'uzb-eng' | 'context' | 'timed' | 'timed-context'
+        let timedDirection = 'eng-uzb'; // 'eng-uzb' | 'uzb-eng'
+        let timedDurationSec = 5;
+        let ctxWordDurationSec = 4;
+        let ctxSentenceDurationSec = 6;
+        let timerInterval = null;
+        let autoAdvanceTimeout = null;
+        let remainingMs = 0;
+        let isTimerPaused = false;
+        let isAutoRevealing = false;
+        let isRevealed = false;
+        let soundEnabled = true;
+
+        // So'zlarni format bo'yicha tahlil qilish: soz[talaffuz] = tarjima [gap] [gap tarjimasi]
+        function parseWordsText(raw) {
+            const lines = raw.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            const parsed = [];
+
+            for (const line of lines) {
+                const eqIndex = line.indexOf('=');
+                if (eqIndex === -1) continue;
+
+                const leftPart = line.slice(0, eqIndex).trim();
+                const rightPart = line.slice(eqIndex + 1).trim();
+
+                // Chap qism: soz[talaffuz]
+                let word = leftPart;
+                let pronunciation = '';
+                const pronMatch = leftPart.match(/^([^\[\]]+)\[(.*?)\]/);
+                if (pronMatch) {
+                    word = pronMatch[1].trim();
+                    pronunciation = pronMatch[2].trim();
+                }
+
+                // O'ng qism: tarjima [gap] [gap tarjimasi]
+                const bracketMatches = [...rightPart.matchAll(/\[(.*?)\]/g)];
+                let translation = rightPart;
+                let sentence = '';
+                let sentenceTranslation = '';
+
+                if (bracketMatches.length > 0) {
+                    translation = rightPart.slice(0, bracketMatches[0].index).trim();
+                    sentence = bracketMatches[0][1].trim();
+                    if (bracketMatches.length > 1) {
+                        sentenceTranslation = bracketMatches[1][1].trim();
+                    }
+                }
+
+                if (word && translation) {
+                    parsed.push({
+                        word,
+                        pronunciation,
+                        translation,
+                        sentence,
+                        sentenceTranslation
+                    });
+                }
+            }
+            return parsed;
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function updateWordCountBadge() {
+            const badge = document.getElementById('word-count-badge');
+            if (badge) {
+                badge.textContent = `${wordsList.length} ta so'z`;
+            }
+        }
+
+        // Ekranlarni almashtirish ('categories' | 'study')
+        function showScreen(screenName) {
+            const catScreen = document.getElementById('screen-categories');
+            const studyScreen = document.getElementById('screen-study');
+            const backBtn = document.getElementById('btn-back-categories');
+            const brandLogo = document.getElementById('brand-logo');
+            const studyInfo = document.getElementById('study-header-info');
+
+            if (screenName === 'categories') {
+                stopWordTimer();
+                if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                catScreen.classList.remove('hidden');
+                catScreen.classList.add('flex');
+                studyScreen.classList.add('hidden');
+                studyScreen.classList.remove('flex');
+                backBtn.classList.add('hidden');
+                backBtn.classList.remove('flex');
+                brandLogo.classList.remove('hidden');
+                studyInfo.classList.add('hidden');
+                studyInfo.classList.remove('flex');
+            } else {
+                catScreen.classList.add('hidden');
+                catScreen.classList.remove('flex');
+                studyScreen.classList.remove('hidden');
+                studyScreen.classList.add('flex');
+                backBtn.classList.remove('hidden');
+                backBtn.classList.add('flex');
+                brandLogo.classList.add('hidden');
+                studyInfo.classList.remove('hidden');
+                studyInfo.classList.add('flex');
+            }
+        }
+
+        function dismissPortraitWarning() {
+            const overlay = document.getElementById('portrait-overlay');
+            if (overlay) {
+                overlay.classList.remove('enforce-landscape');
+                overlay.style.display = 'none';
+            }
+        }
+
+        // So'z kiritish modali funksiyalari
+        function openInputModal() {
+            stopWordTimer();
+            const modal = document.getElementById('input-modal');
+            const textarea = document.getElementById('words-textarea');
+            const status = document.getElementById('modal-status');
+            status.classList.add('hidden');
+
+            const savedRaw = localStorage.getItem('vocabflow_raw_words');
+            textarea.value = savedRaw !== null ? savedRaw : DEFAULT_RAW_TEXT;
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeInputModal() {
+            const modal = document.getElementById('input-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function loadSampleWords() {
+            document.getElementById('words-textarea').value = DEFAULT_RAW_TEXT;
+        }
+
+        function saveWordsFromInput() {
+            const raw = document.getElementById('words-textarea').value;
+            const status = document.getElementById('modal-status');
+            const parsed = parseWordsText(raw);
+
+            if (parsed.length === 0) {
+                status.textContent = "Xatolik: Kamida bitta to'g'ri formatdagi so'z kiriting (Masalan: Apple[æpl] = Olma [Gap] [Tarjima])";
+                status.className = "px-3.5 py-2 rounded-xl text-xs font-semibold bg-red-950/80 border border-red-500/50 text-red-300 block";
+                return;
+            }
+
+            wordsList = parsed;
+            localStorage.setItem('vocabflow_raw_words', raw);
+            updateWordCountBadge();
+            closeInputModal();
+            showScreen('categories');
+        }
+
+        // 4-Kategoriya (Timer) modali funksiyalari
+        function openTimerSetupModal() {
+            if (wordsList.length === 0) {
+                openInputModal();
+                return;
+            }
+            stopWordTimer();
+            const modal = document.getElementById('timer-setup-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeTimerSetupModal() {
+            const modal = document.getElementById('timer-setup-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function selectTimedDirection(dir) {
+            timedDirection = dir;
+            const btnEngUzb = document.getElementById('dir-btn-eng-uzb');
+            const btnUzbEng = document.getElementById('dir-btn-uzb-eng');
+
+            if (dir === 'eng-uzb') {
+                btnEngUzb.className = "py-2.5 px-4 rounded-xl bg-blue-600 border-2 border-sky-300 text-white font-extrabold text-sm shadow-lg shadow-blue-600/30 transition";
+                btnUzbEng.className = "py-2.5 px-4 rounded-xl bg-slate-900 border border-blue-800/70 text-slate-300 hover:border-sky-400 font-bold text-sm transition";
+            } else {
+                btnUzbEng.className = "py-2.5 px-4 rounded-xl bg-blue-600 border-2 border-sky-300 text-white font-extrabold text-sm shadow-lg shadow-blue-600/30 transition";
+                btnEngUzb.className = "py-2.5 px-4 rounded-xl bg-slate-900 border border-blue-800/70 text-slate-300 hover:border-sky-400 font-bold text-sm transition";
+            }
+        }
+
+        function setPresetSeconds(sec) {
+            document.getElementById('timer-seconds-input').value = sec;
+        }
+
+        function startTimedStudy() {
+            const inputEl = document.getElementById('timer-seconds-input');
+            let sec = parseInt(inputEl.value, 10);
+            if (isNaN(sec) || sec < 1) sec = 5;
+            if (sec > 120) sec = 120;
+            timedDurationSec = sec;
+            closeTimerSetupModal();
+            startStudy('timed');
+        }
+
+        // 5-Kategoriya (Vaqtli Gaplar) modali funksiyalari
+        function openContextTimerModal() {
+            if (wordsList.length === 0) {
+                openInputModal();
+                return;
+            }
+            stopWordTimer();
+            const modal = document.getElementById('context-timer-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeContextTimerModal() {
+            const modal = document.getElementById('context-timer-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function setCtxWordPreset(sec) {
+            document.getElementById('ctx-word-seconds-input').value = sec;
+        }
+
+        function setCtxSentencePreset(sec) {
+            document.getElementById('ctx-sentence-seconds-input').value = sec;
+        }
+
+        function startTimedContextStudy() {
+            const wordInput = document.getElementById('ctx-word-seconds-input');
+            const sentInput = document.getElementById('ctx-sentence-seconds-input');
+            let wSec = parseInt(wordInput.value, 10);
+            let sSec = parseInt(sentInput.value, 10);
+            if (isNaN(wSec) || wSec < 1) wSec = 4;
+            if (wSec > 120) wSec = 120;
+            if (isNaN(sSec) || sSec < 1) sSec = 6;
+            if (sSec > 120) sSec = 120;
+            ctxWordDurationSec = wSec;
+            ctxSentenceDurationSec = sSec;
+            closeContextTimerModal();
+            startStudy('timed-context');
+        }
+
+        function startWordTimer() {
+            stopWordTimer();
+            if (currentMode !== 'timed' && currentMode !== 'timed-context') return;
+            const durationSec = currentMode === 'timed-context'
+                ? (isRevealed ? ctxSentenceDurationSec : ctxWordDurationSec)
+                : timedDurationSec;
+            const totalMs = durationSec * 1000;
+            remainingMs = totalMs;
+            isTimerPaused = false;
+            updateTimerVisuals(remainingMs, totalMs);
+
+            const tickStep = 50;
+            timerInterval = setInterval(() => {
+                if (isTimerPaused) return;
+                remainingMs -= tickStep;
+                if (remainingMs <= 0) {
+                    remainingMs = 0;
+                    updateTimerVisuals(0, totalMs);
+                    stopWordTimer();
+                    handleTimerExpired();
+                } else {
+                    updateTimerVisuals(remainingMs, totalMs);
+                }
+            }, tickStep);
+        }
+
+        function handleTimerExpired() {
+            if (currentMode === 'timed-context') {
+                if (!isRevealed) {
+                    isRevealed = true;
+                    renderCard(false);
+                    const item = wordsList[currentIndex];
+                    if (item && item.sentence) {
+                        speakText(item.sentence);
+                    }
+                    startWordTimer();
+                } else {
+                    nextWord();
+                }
+                return;
+            }
+
+            if (isRevealed) {
+                nextWord();
+                return;
+            }
+            isAutoRevealing = true;
+            isRevealed = true;
+            renderCard(false);
+
+            const txt = document.getElementById('timer-countdown-text');
+            if (txt) {
+                txt.textContent = "Tarjima!";
+                txt.classList.add('text-amber-300');
+            }
+
+            // Eng->Uzb rejimida tarjima ochilganda ham inglizcha so'zni eslatma sifatida o'qib beramiz
+            if (timedDirection === 'eng-uzb') {
+                const item = wordsList[currentIndex];
+                if (item) speakText(item.word);
+            }
+
+            autoAdvanceTimeout = setTimeout(() => {
+                isAutoRevealing = false;
+                if (txt) txt.classList.remove('text-amber-300');
+                nextWord();
+            }, 1800);
+        }
+
+        function stopWordTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            if (autoAdvanceTimeout) {
+                clearTimeout(autoAdvanceTimeout);
+                autoAdvanceTimeout = null;
+            }
+            isAutoRevealing = false;
+            const txt = document.getElementById('timer-countdown-text');
+            if (txt) txt.classList.remove('text-amber-300');
+        }
+
+        function updateTimerVisuals(remMs, totalMs) {
+            const bar = document.getElementById('timer-progress-bar');
+            const txt = document.getElementById('timer-countdown-text');
+            if (!bar || !txt) return;
+            const pct = Math.max(0, Math.min(100, (remMs / totalMs) * 100));
+            bar.style.width = pct + '%';
+            const secVal = (remMs / 1000).toFixed(1);
+            if (currentMode === 'timed-context') {
+                txt.textContent = (isRevealed ? 'Gap: ' : "So'z: ") + secVal + 's';
+            } else {
+                txt.textContent = secVal + 's';
+            }
+        }
+
+        // O'qish (Study) rejimini boshlash
+        function startStudy(mode) {
+            if (wordsList.length === 0) {
+                openInputModal();
+                return;
+            }
+            currentMode = mode;
+            currentIndex = 0;
+            isRevealed = false;
+
+            const modeTitles = {
+                'eng-uzb': '1. Eng → Uzb',
+                'uzb-eng': '2. Uzb → Eng',
+                'context': '3. Gaplar bilan',
+                'timed': `4. Vaqtli (${timedDirection === 'eng-uzb' ? 'Eng→Uzb' : 'Uzb→Eng'} • ${timedDurationSec}s)`,
+                'timed-context': `5. Vaqtli Gaplar (${ctxWordDurationSec}s / ${ctxSentenceDurationSec}s)`
+            };
+            document.getElementById('active-mode-label').textContent = modeTitles[mode];
+
+            const timerHud = document.getElementById('timer-hud');
+            if (mode === 'timed' || mode === 'timed-context') {
+                timerHud.classList.remove('hidden');
+                timerHud.classList.add('flex');
+            } else {
+                stopWordTimer();
+                timerHud.classList.add('hidden');
+                timerHud.classList.remove('flex');
+            }
+
+            showScreen('study');
+            renderCard(true);
+            speakCurrentWord(false);
+            if (mode === 'timed' || mode === 'timed-context') {
+                startWordTimer();
+            }
+        }
+
+        // Karta ko'rinishini chizish
+        function renderCard(animateEntrance = false) {
+            const item = wordsList[currentIndex];
+            const card = document.getElementById('flashcard');
+            const content = document.getElementById('card-content');
+            const hintText = document.getElementById('tap-hint-text');
+
+            // Progress yangilash
+            const total = wordsList.length;
+            const currentNum = currentIndex + 1;
+            document.getElementById('progress-text').textContent = `${currentNum} / ${total}`;
+            document.getElementById('progress-bar').style.width = `${(currentNum / total) * 100}%`;
+
+            if (animateEntrance) {
+                card.classList.remove('card-enter');
+                void card.offsetWidth;
+                card.classList.add('card-enter');
+            }
+
+            // 3-KATEGORIYA VA 5-KATEGORIYA: GAPLAR BILAN (ANIMATSIYALI)
+            if (currentMode === 'context' || currentMode === 'timed-context') {
+                if (isRevealed) {
+                    card.classList.add('mode3-revealed');
+                    hintText.textContent = currentMode === 'timed-context'
+                        ? "Keyingi so'zga o'tish uchun bosing yoki vaqt tugashini kuting"
+                        : "Keyingi so'zga o'tish uchun yana bosing";
+                } else {
+                    card.classList.remove('mode3-revealed');
+                    hintText.textContent = currentMode === 'timed-context'
+                        ? "Gap va tarjimani ko'rish uchun bosing yoki vaqt tugashini kuting"
+                        : "Tarjima va gap ma'nosini ko'rish uchun bosing";
+                }
+
+                // Birinchi marta karta ochilganda DOM elementlarini yaratamiz (CSS transition silliq ishlashi uchun)
+                if (!content.querySelector('.mode3-wrapper') || animateEntrance) {
+                    const pronHtml = item.pronunciation
+                        ? `<span class="text-lg sm:text-2xl font-semibold text-sky-400/90 ml-2">[${escapeHtml(item.pronunciation)}]</span>`
+                        : '';
+
+                    const sentenceHtml = item.sentence
+                        ? `<p class="text-base sm:text-xl md:text-2xl text-slate-200 font-medium max-w-3xl leading-snug">"${escapeHtml(item.sentence)}"</p>`
+                        : `<p class="text-sm text-slate-500 italic">(Bu so'z uchun gap kiritilmagan)</p>`;
+
+                    const sentenceTransHtml = item.sentenceTranslation
+                        ? `<p class="text-sm sm:text-lg md:text-xl text-sky-300/90 font-medium mt-1.5">"${escapeHtml(item.sentenceTranslation)}"</p>`
+                        : '';
+
+                    content.innerHTML = `
+                        <div class="mode3-wrapper w-full flex flex-col items-center justify-center">
+                            <!-- Asosiy So'z (Bosilganda ekran tepasiga chiqib yo'qoladi) -->
+                            <div class="word-hero flex flex-wrap items-baseline justify-center">
+                                <span class="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight text-white drop-shadow-[0_0_25px_rgba(56,189,248,0.25)]">
+                                    ${escapeHtml(item.word)}
+                                </span>
+                                ${pronHtml}
+                            </div>
+
+                            <!-- Dastlabki holatda so'z tagida turadigan inglizcha gap -->
+                            <div class="mode3-sentence-initial mt-3 px-4 py-2 rounded-2xl bg-blue-950/30 border border-blue-800/40">
+                                ${sentenceHtml}
+                            </div>
+
+                            <!-- Pastdan tepaga chiqadigan tarjima + gap + gap tarjimasi -->
+                            <div class="reveal-slide-up w-full max-w-3xl flex flex-col items-center">
+                                <div class="px-6 py-2.5 rounded-2xl bg-gradient-to-r from-blue-600/25 via-sky-500/20 to-blue-600/25 border border-sky-400/50 shadow-lg shadow-blue-600/15 mb-3">
+                                    <span class="text-[10px] uppercase tracking-widest text-sky-400 font-bold block mb-0.5">So'z tarjimasi</span>
+                                    <span class="text-2xl sm:text-4xl md:text-5xl font-extrabold text-white">
+                                        ${escapeHtml(item.translation)}
+                                    </span>
+                                </div>
+
+                                ${item.sentence ? `
+                                <div class="w-full px-5 py-3 rounded-2xl bg-slate-900/90 border border-blue-800/60">
+                                    <p class="text-sm sm:text-lg md:text-xl text-slate-100 font-semibold leading-snug">
+                                        "${escapeHtml(item.sentence)}"
+                                    </p>
+                                    ${sentenceTransHtml}
+                                </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+                }
+                return;
+            }
+
+            // 1-, 2- VA 4-KATEGORIYALAR: ENG->UZB, UZB->ENG YOKI VAQTLI
+            card.classList.remove('mode3-revealed');
+            const effectiveDir = currentMode === 'timed' ? timedDirection : currentMode;
+            const isEngFirst = (effectiveDir === 'eng-uzb');
+
+            if (!isRevealed) {
+                hintText.textContent = currentMode === 'timed'
+                    ? "Vaqt tugamasidan javobni toping yoki bosing"
+                    : "Tarjimani ko'rish uchun so'z ustiga bosing";
+
+                if (isEngFirst) {
+                    content.innerHTML = `
+                        <div class="flex flex-col items-center justify-center">
+                            <span class="text-xs uppercase tracking-widest text-blue-400 font-bold mb-2">English</span>
+                            <h2 class="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight text-white drop-shadow-[0_0_25px_rgba(37,99,235,0.35)]">
+                                ${escapeHtml(item.word)}
+                            </h2>
+                            ${item.pronunciation ? `<p class="text-lg sm:text-2xl font-semibold text-sky-400 mt-2">[${escapeHtml(item.pronunciation)}]</p>` : ''}
+                        </div>
+                    `;
+                } else {
+                    content.innerHTML = `
+                        <div class="flex flex-col items-center justify-center">
+                            <span class="text-xs uppercase tracking-widest text-sky-400 font-bold mb-2">O'zbekcha</span>
+                            <h2 class="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight text-white drop-shadow-[0_0_25px_rgba(56,189,248,0.3)]">
+                                ${escapeHtml(item.translation)}
+                            </h2>
+                        </div>
+                    `;
+                }
+            } else {
+                hintText.textContent = "Keyingi so'zga o'tish uchun yana bosing";
+
+                if (isEngFirst) {
+                    content.innerHTML = `
+                        <div class="flex flex-col items-center justify-center">
+                            <div class="opacity-75 mb-3">
+                                <span class="text-2xl sm:text-4xl font-extrabold text-slate-200">${escapeHtml(item.word)}</span>
+                                ${item.pronunciation ? `<span class="text-base sm:text-xl text-sky-400 ml-2">[${escapeHtml(item.pronunciation)}]</span>` : ''}
+                            </div>
+                            <div class="w-16 h-0.5 bg-blue-600/60 rounded-full mb-3"></div>
+                            <div class="fade-scale-in px-7 py-3 rounded-2xl bg-blue-600/20 border border-sky-400/50 shadow-lg shadow-blue-600/20">
+                                <h3 class="text-3xl sm:text-5xl md:text-6xl font-black text-sky-300">
+                                    ${escapeHtml(item.translation)}
+                                </h3>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    content.innerHTML = `
+                        <div class="flex flex-col items-center justify-center">
+                            <div class="opacity-75 mb-3">
+                                <span class="text-2xl sm:text-4xl font-extrabold text-slate-200">${escapeHtml(item.translation)}</span>
+                            </div>
+                            <div class="w-16 h-0.5 bg-blue-600/60 rounded-full mb-3"></div>
+                            <div class="fade-scale-in px-7 py-3 rounded-2xl bg-blue-600/20 border border-sky-400/50 shadow-lg shadow-blue-600/20">
+                                <h3 class="text-3xl sm:text-5xl md:text-6xl font-black text-sky-300">
+                                    ${escapeHtml(item.word)}
+                                </h3>
+                                ${item.pronunciation ? `<p class="text-base sm:text-xl font-semibold text-blue-300 mt-1">[${escapeHtml(item.pronunciation)}]</p>` : ''}
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        // Karta ustiga bosilganda bajariladigan amal
+        function handleCardTap() {
+            if (currentMode === 'timed' && isAutoRevealing) {
+                // Avtomatik tarjima ko'rsatilayotganda foydalanuvchi bossa darhol keyingi so'zga o'tadi
+                nextWord();
+                return;
+            }
+            if (!isRevealed) {
+                isRevealed = true;
+                if (currentMode === 'timed') {
+                    // Foydalanuvchi vaqt tugashidan oldin bossa taymer to'xtaydi va keyingi bosishni kutadi
+                    stopWordTimer();
+                    const txt = document.getElementById('timer-countdown-text');
+                    if (txt) txt.textContent = "Ochildi";
+                }
+                renderCard(false);
+                
+                // Tarjima chiqqan paytda har doim ovozli o'qish (spelling) ishga tushishi
+                const item = wordsList[currentIndex];
+                if (item) {
+                    if ((currentMode === 'context' || currentMode === 'timed-context') && item.sentence) {
+                        speakText(item.sentence);
+                    } else {
+                        speakText(item.word);
+                    }
+                }
+
+                if (currentMode === 'timed-context') {
+                    startWordTimer();
+                }
+            } else {
+                nextWord();
+            }
+        }
+
+        // Keyingi so'zga o'tish
+        function nextWord() {
+            stopWordTimer();
+            currentIndex = (currentIndex + 1) % wordsList.length;
+            isRevealed = false;
+            renderCard(true);
+            speakCurrentWord(false);
+            if (currentMode === 'timed' || currentMode === 'timed-context') {
+                startWordTimer();
+            }
+        }
+
+        // Oldingi so'zga qaytish
+        function prevWord() {
+            stopWordTimer();
+            currentIndex = (currentIndex - 1 + wordsList.length) % wordsList.length;
+            isRevealed = false;
+            renderCard(true);
+            speakCurrentWord(false);
+            if (currentMode === 'timed' || currentMode === 'timed-context') {
+                startWordTimer();
+            }
+        }
+
+        // Web Speech API orqali ovozli o'qish
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const iconOn = document.getElementById('icon-sound-on');
+            const iconOff = document.getElementById('icon-sound-off');
+            const label = document.getElementById('sound-label');
+            const btn = document.getElementById('btn-sound-toggle');
+
+            if (soundEnabled) {
+                iconOn.classList.remove('hidden');
+                iconOff.classList.add('hidden');
+                label.textContent = "Ovoz: Yoqilgan";
+                btn.classList.add('bg-blue-600/20', 'border-blue-500/40', 'text-sky-300');
+                btn.classList.remove('bg-slate-900', 'border-slate-700', 'text-slate-400');
+            } else {
+                if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                iconOn.classList.add('hidden');
+                iconOff.classList.remove('hidden');
+                label.textContent = "Ovoz: O'chirilgan";
+                btn.classList.remove('bg-blue-600/20', 'border-blue-500/40', 'text-sky-300');
+                btn.classList.add('bg-slate-900', 'border-slate-700', 'text-slate-400');
+            }
+        }
+
+        function speakText(text) {
+            if (!soundEnabled || !text || !('speechSynthesis' in window)) return;
+            try {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'en-US';
+                utterance.rate = 0.92;
+                window.speechSynthesis.speak(utterance);
+            } catch (e) {
+                console.warn("Speech synthesis xatosi:", e);
+            }
+        }
+
+        function speakCurrentWord(forceIncludeSentence = false) {
+            if (!soundEnabled || wordsList.length === 0) return;
+            const item = wordsList[currentIndex];
+            if (!item) return;
+
+            // Uzb->Eng rejimida javob ochilmagan bo'lsa oldindan inglizcha so'zni o'qimaymiz
+            const effectiveDir = currentMode === 'timed' ? timedDirection : currentMode;
+            if (effectiveDir === 'uzb-eng' && !isRevealed && !forceIncludeSentence) {
+                return;
+            }
+
+            if ((currentMode === 'context' || currentMode === 'timed-context') && item.sentence) {
+                if (forceIncludeSentence) {
+                    speakText(`${item.word}. ${item.sentence}`);
+                } else if (isRevealed) {
+                    speakText(item.sentence);
+                } else {
+                    speakText(item.word);
+                }
+            } else {
+                speakText(item.word);
+            }
+        }
+
+        // Ilovani ishga tushirish
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedRaw = localStorage.getItem('vocabflow_raw_words');
+            const initialRaw = savedRaw !== null ? savedRaw : DEFAULT_RAW_TEXT;
+            wordsList = parseWordsText(initialRaw);
+            updateWordCountBadge();
+        });
+    </script>
+</body>
+</html>
